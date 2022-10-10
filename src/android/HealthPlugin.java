@@ -864,7 +864,7 @@ public class HealthPlugin extends CordovaPlugin {
     String bucketType = "";
     if (hasbucket) {
       bucketType = args.getJSONObject(0).getString("bucket");
-      if (!bucketType.equalsIgnoreCase("hour") && !bucketType.equalsIgnoreCase("day")) {
+      if (!bucketType.equalsIgnoreCase("minute") && !bucketType.equalsIgnoreCase("hour") && !bucketType.equalsIgnoreCase("day")) {
         customBucket = true;
         if (!bucketType.equalsIgnoreCase("week") && !bucketType.equalsIgnoreCase("month") && !bucketType.equalsIgnoreCase("year")) {
           // error
@@ -876,37 +876,44 @@ public class HealthPlugin extends CordovaPlugin {
       Calendar c = Calendar.getInstance();
 
       c.setTimeInMillis(st);
-      c.clear(Calendar.MINUTE);
       c.clear(Calendar.SECOND);
       c.clear(Calendar.MILLISECOND);
-      if (!bucketType.equalsIgnoreCase("hour")) {
+      c.clear(Calendar.MINUTE);
+      if (!bucketType.equalsIgnoreCase("minute")) {
         c.set(Calendar.HOUR_OF_DAY, 0);
-        if (bucketType.equalsIgnoreCase("week")) {
-          c.set(Calendar.DAY_OF_WEEK, c.getFirstDayOfWeek());
-        } else if (bucketType.equalsIgnoreCase("month")) {
-          c.set(Calendar.DAY_OF_MONTH, 1);
-        } else if (bucketType.equalsIgnoreCase("year")) {
-          c.set(Calendar.DAY_OF_YEAR, 1);
+        if (!bucketType.equalsIgnoreCase("hour")) {
+          c.set(Calendar.HOUR_OF_DAY, 0);
+          if (bucketType.equalsIgnoreCase("week")) {
+            c.set(Calendar.DAY_OF_WEEK, c.getFirstDayOfWeek());
+          } else if (bucketType.equalsIgnoreCase("month")) {
+            c.set(Calendar.DAY_OF_MONTH, 1);
+          } else if (bucketType.equalsIgnoreCase("year")) {
+            c.set(Calendar.DAY_OF_YEAR, 1);
+          }
         }
       }
       st = c.getTimeInMillis();
 
       c.setTimeInMillis(et);
-      c.clear(Calendar.MINUTE);
       c.clear(Calendar.SECOND);
       c.clear(Calendar.MILLISECOND);
-      if (bucketType.equalsIgnoreCase("hour")) {
+      c.clear(Calendar.MINUTE);
+      if (bucketType.equalsIgnoreCase("minute")) {
         c.add(Calendar.HOUR_OF_DAY, 1);
       } else {
-        c.set(Calendar.HOUR_OF_DAY, 0);
-        if (bucketType.equalsIgnoreCase("day")) {
-          c.add(Calendar.DAY_OF_YEAR, 1);
-        } else if (bucketType.equalsIgnoreCase("week")) {
-          c.add(Calendar.DAY_OF_YEAR, 7);
-        } else if (bucketType.equalsIgnoreCase("month")) {
-          c.add(Calendar.MONTH, 1);
-        } else if (bucketType.equalsIgnoreCase("year")) {
-          c.add(Calendar.YEAR, 1);
+        if (bucketType.equalsIgnoreCase("hour")) {
+          c.add(Calendar.HOUR_OF_DAY, 1);
+        } else {
+          c.set(Calendar.HOUR_OF_DAY, 0);
+          if (bucketType.equalsIgnoreCase("day")) {
+            c.add(Calendar.DAY_OF_YEAR, 1);
+          } else if (bucketType.equalsIgnoreCase("week")) {
+            c.add(Calendar.DAY_OF_YEAR, 7);
+          } else if (bucketType.equalsIgnoreCase("month")) {
+            c.add(Calendar.MONTH, 1);
+          } else if (bucketType.equalsIgnoreCase("year")) {
+            c.add(Calendar.YEAR, 1);
+          }
         }
       }
       et = c.getTimeInMillis();
@@ -959,7 +966,9 @@ public class HealthPlugin extends CordovaPlugin {
     }
 
     if (hasbucket) {
-      if (bucketType.equalsIgnoreCase("hour")) {
+      if (bucketType.equalsIgnoreCase("minute")) {
+        builder.bucketByTime(1, TimeUnit.MINUTES);
+      } else if (bucketType.equalsIgnoreCase("hour")) {
         builder.bucketByTime(1, TimeUnit.HOURS);
       } else if (bucketType.equalsIgnoreCase("day")) {
         builder.bucketByTime(1, TimeUnit.DAYS);
@@ -1152,7 +1161,7 @@ public class HealthPlugin extends CordovaPlugin {
             retBucket.put("value", basals);
           }
           // if the bucket is not daily, it needs to be normalised
-          if (!hasbucket || bucketType.equalsIgnoreCase("hour")) {
+          if (!hasbucket || bucketType.equalsIgnoreCase("minute") || bucketType.equalsIgnoreCase("hour")) {
             long sst = retBucket.getLong("startDate");
             long eet = retBucket.getLong("endDate");
             basals = (basals / (24 * 60 * 60 * 1000)) * (eet - sst);
@@ -1467,14 +1476,8 @@ public class HealthPlugin extends CordovaPlugin {
         callbackContext.success();
       })
       .addOnFailureListener(err -> {
-          String message = "";
-          if (err != null) {
-            message = err.getMessage();
-            if (err.getCause() != null) {
-              err.getCause().printStackTrace();
-            }
-          }
-          callbackContext.error(message);
+        err.getCause().printStackTrace();
+        callbackContext.error(err.getMessage());
       });
   }
 
@@ -1513,14 +1516,8 @@ public class HealthPlugin extends CordovaPlugin {
         callbackContext.success();
       })
       .addOnFailureListener(err -> {
-        String message = "";
-        if (err != null) {
-          message = err.getMessage();
-          if (err.getCause() != null) {
-            err.getCause().printStackTrace();
-          }
-        }
-        callbackContext.error(message);
+        err.getCause().printStackTrace();
+        callbackContext.error(err.getMessage());
       });
   }
 }
