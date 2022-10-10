@@ -1465,7 +1465,9 @@ static NSString *const HKPluginKeyUUID = @"UUID";
 
     NSString *aggregation = args[HKPluginKeyAggregation];
     // TODO would be nice to also have the dev pass in the nr of hours/days/..
-    if ([@"hour" isEqualToString:aggregation]) {
+    if ([@"minute" isEqualToString:aggregation]) {
+        interval.minute = 1;
+    } else if ([@"hour" isEqualToString:aggregation]) {
         interval.hour = 1;
     } else if ([@"week" isEqualToString:aggregation]) {
         interval.day = 7;
