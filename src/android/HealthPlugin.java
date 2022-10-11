@@ -350,7 +350,7 @@ public class HealthPlugin extends CordovaPlugin {
           if (err != null) {
             message = err.getMessage();
             if (err.getCause() != null) {
-              err.getCause().printStackTrace();
+          err.getCause().printStackTrace();
             }
           }
           callbackContext.error("cannot disconnect," + message);
@@ -1098,10 +1098,18 @@ public class HealthPlugin extends CordovaPlugin {
 
         // aggregate data points over the bucket
         boolean atleastone = false;
+        boolean filtered = args.getJSONObject(0).has("filtered") && args.getJSONObject(0).getBoolean("filtered");
         for (DataSet dataset : bucket.getDataSets()) {
           for (DataPoint datapoint : dataset.getDataPoints()) {
             atleastone = true;
             if (datatype.equalsIgnoreCase("steps")) {
+              if (filtered) {
+                DataSource origDataSource = datapoint.getOriginalDataSource();
+                String origIdentifier = origDataSource.getStreamIdentifier();
+                if (origIdentifier.contains("user_input")) {
+                  continue;
+                }
+              }
               int nsteps = datapoint.getValue(Field.FIELD_STEPS).asInt();
               int osteps = retBucket.getInt("value");
               retBucket.put("value", osteps + nsteps);
